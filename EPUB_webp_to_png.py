@@ -63,14 +63,14 @@ def convert_webp_to_png(webp_path):
     try:
         png_path = webp_path.with_suffix('.png')
         with Image.open(webp_path) as img:
-            if img.mode == 'P':
+            has_alpha = (img.mode in ('RGBA', 'LA', 'PA') or 'transparency' in img.info)
+            
+            if has_alpha:
                 img = img.convert('RGBA')
-            if img.mode in ('RGBA', 'LA', 'PA') or 'transparency' in img.info:
-                if img.mode != 'RGBA':
-                    img = img.convert('RGBA')
-                img.save(png_path, 'PNG')
             else:
-                img.convert('RGB').save(png_path, 'PNG')
+                # 无透明通道：强制转为 RGB
+                img = img.convert('RGB')
+            img.save(png_path, 'PNG', compress_level=9, optimize=True)
         return png_path
     except Exception as e:
         print(f"⚠️  转换失败 {webp_path.name}: {e}")
